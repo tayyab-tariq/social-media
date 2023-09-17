@@ -15,7 +15,8 @@ import { useDispatch } from "react-redux";
 import { setLogin } from "../../state";
 import Dropzone from "react-dropzone";
 import FlexBetween from "../../components/FlexBetween";
-import { useLoginMutation } from "../../slices/usersApiSlice";
+import { useLoginMutation, useRegisterMutation } from "../../slices/usersApiSlice";
+import { toast } from "react-toastify";
 
 const registerScheme = yup.object().shape({
     firstName: yup.string().required('required'),
@@ -48,7 +49,7 @@ const initialValuesLogin = {
 };
 
 const Form = () => {
-    const [pageType, setPageType] = useState('register');
+    const [pageType, setPageType] = useState('login');
     const { palette } = useTheme();
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -57,16 +58,31 @@ const Form = () => {
     const isRegister = pageType === 'register';
 
     const [login, {isLoading}] = useLoginMutation();
+    const [register, {isRegisterLoading}] = useRegisterMutation();
 
     const handleFormSubmit = async(values, onSubmitProps) => {
-        try {
-            const res = await login();
-            console.log(res);
-            // dispatch(setCredentials({...res}));
-            // navigate('/');
-        } catch (err) {
-            // toast.error(err?.data?.message || err.error);
+        if (isLogin){
+            try {
+                const res = await login({ values }).unwrap();
+                dispatch(setLogin({...res}));
+                navigate('/home');
+            } catch (err) {
+                console.log(err);
+                toast.error(err?.data?.message || err.error);
+            }
+        } else{
+            try {       
+                const res = await register({ values }).unwrap();
+                onSubmitProps.resetForm();
+                if (res) {
+                  setPageType("login");
+                }
+            } catch (err) {
+                console.log(err)
+                toast.error(err?.data?.message || err.error);
+            }
         }
+        
     };
 
     return (

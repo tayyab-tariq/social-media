@@ -15,6 +15,10 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         url: `${USERS_URL}/register`,
         method: "POST",
         body: data,
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+        invalidatesTags: ['Post'],
       }),
     }),
   }),
