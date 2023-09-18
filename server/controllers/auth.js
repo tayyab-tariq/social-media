@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import User from "../models/User.js";
 import asyncHandler from 'express-async-handler';
+import generateToken from '../utils/generateToken.js'
 
 
 export const register = asyncHandler(async (req, res) => {
@@ -16,7 +17,7 @@ export const register = asyncHandler(async (req, res) => {
         location,
         occupation
     } = req.body;
-
+    
     const userExists = await User.findOne({ email });
 
     if (userExists){
@@ -27,7 +28,7 @@ export const register = asyncHandler(async (req, res) => {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const newUser = new User({
+    const newUser = await User.create({
         firstName,
         lastName,
         email,
@@ -39,14 +40,12 @@ export const register = asyncHandler(async (req, res) => {
         viewedProfile: Math.floor(Math.random() * 10000),
         impressions: Math.floor(Math.random() * 10000)
     });
-
-    const savedUser = await newUser.create();
-    if (savedUser){
-        generateToken(res, savedUser._id);
+    
+    if (newUser){
         res.status(201).json({
-            _id: savedUser._id,
-            name: savedUser.firstName,
-            email: savedUser.email
+            _id: newUser._id,
+            name: newUser.firstName,
+            email: newUser.email
         });
     }   else {
         res.status(400);
@@ -55,21 +54,24 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-    
+
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
-    if (!user){
+    const checkUser = await User.findOne({ email: email });
+
+    if (!checkUser){
         res.status(401);
         throw new Error('Invalid email or password');
     }
-    
-    const isMatch = await bcrypt.compare(password, user.password);
+
+
+    const isMatch = await bcrypt.compare(password, checkUser.password);
     if (!isMatch){
         res.status(401);
         throw new Error('Invalid email or password');
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = generateToken(res, checkUser._id);
+    const user = { ...checkUser.toObject() };
     delete user.password;
     res.status(200).json({ token, user });
 

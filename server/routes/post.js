@@ -10,7 +10,7 @@ router.get("/:userId/posts", protect, getUserPosts);
 
 
 /* UPDATE */
-router.get("/:id/like", protect, likePost);
+router.patch("/:id/like", protect, likePost);
 
 
 
