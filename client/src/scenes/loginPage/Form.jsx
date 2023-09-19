@@ -63,7 +63,7 @@ const Form = () => {
     const handleFormSubmit = async(values, onSubmitProps) => {
         if (isLogin){
             try {
-                const res = await login({ values }).unwrap();
+                const res = await login( values ).unwrap();
                 dispatch(setLogin({...res}));
                 navigate('/home');
             } catch (err) {
@@ -71,8 +71,9 @@ const Form = () => {
                 toast.error(err?.data?.message || err.error);
             }
         } else{
-            try {       
-                const res = await register({ values }).unwrap();
+            try {
+                values.picturePath = values.picture.name;       
+                const res = await register( values ).unwrap();
                 onSubmitProps.resetForm();
                 if (res) {
                   setPageType("login");
